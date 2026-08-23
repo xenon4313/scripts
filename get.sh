@@ -1,4 +1,60 @@
 #!/bin/bash
+set -euo pipefail
+
+# === Проверка root ===
+if [ "$EUID" -ne 0 ]; then
+  echo "Запусти скрипт от root (sudo)."
+  exit 1
+fi
+
+# === Установка зависимостей (curl, socat) ===
+install_pkg() {
+  local pkg="$1"
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get update -qq && apt-get install -y "$pkg"
+  elif command -v yum >/dev/null 2>&1; then
+    yum install -y "$pkg"
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y "$pkg"
+  elif command -v apk >/dev/null 2>&1; then
+    apk add --no-cache "$pkg"
+  else
+    echo "Не удалось определить пакетный менеджер. Установи '$pkg' вручную."
+    exit 1
+  fi
+}
+
+for bin in curl socat cron; do
+  case "$bin" in
+    cron) command -v cron >/dev/null 2>&1 || command -v crond >/dev/null 2>&1 || { echo "cron не найден, устанавливаю..."; install_pkg cron || true; } ;;
+    *) command -v "$bin" >/dev/null 2>&1 || { echo "$bin не найден, устанавливаю..."; install_pkg "$bin"; } ;;
+  esac
+done
+
+# === Установка acme.sh, если его нет ===
+ACME_HOME="${HOME:-/root}/.acme.sh"
+if [ ! -f "$ACME_HOME/acme.sh" ]; then
+  echo "acme.sh не найден. Устанавливаю..."
+  read -p "Email для регистрации в Let's Encrypt (можно пустым): " ACME_EMAIL
+  if [ -n "$ACME_EMAIL" ]; then
+    curl https://get.acme.sh | sh -s email="$ACME_EMAIL"
+  else
+    curl https://get.acme.sh | sh
+  fi
+  echo "acme.sh установлен."
+else
+  echo "acme.sh уже установлен: $ACME_HOME/acme.sh"
+fi
+
+# Подключаем алиас acme.sh в текущей сессии, если он не в PATH
+if ! command -v acme.sh >/dev/null 2>&1; then
+  export PATH="$ACME_HOME:$PATH"
+  alias acme.sh="$ACME_HOME/acme.sh"
+fi
+ACME_BIN="$ACME_HOME/acme.sh"
+
+# По умолчанию используем Let's Encrypt как CA (можно сменить на zerossl)
+"$ACME_BIN" --set-default-ca --server letsencrypt >/dev/null 2>&1 || true
 
 # === Проверка папки ===
 if [ -d "/etc/certs" ]; then
@@ -28,7 +84,6 @@ fi
 # === Ввод данных ===
 read -p "Введи домен (например example.com): " DOMAIN
 read -p "Имя для ключа (без .key, например example): " KEYNAME
-
 KEY_FILE="/etc/certs/${KEYNAME}.key"
 FULLCHAIN_FILE="/etc/certs/fullchain.cer"
 
@@ -48,7 +103,7 @@ fi
 # === Выпуск сертификата ===
 echo ""
 echo "Выпускаю сертификат для $DOMAIN..."
-acme.sh --issue -d "$DOMAIN" --standalone --server letsencrypt \
+"$ACME_BIN" --issue -d "$DOMAIN" --standalone --server letsencrypt \
   --key-file "$KEY_FILE" \
   --fullchain-file "$FULLCHAIN_FILE"
 
@@ -57,7 +112,10 @@ if [ $? -eq 0 ]; then
   echo "Готово!"
   echo "Ключ:      $KEY_FILE"
   echo "Fullchain: $FULLCHAIN_FILE"
+  echo ""
+  echo "Автопродление настроено acme.sh автоматически (через cron/systemd timer)."
 else
   echo ""
   echo "Ошибка при выпуске. Смотри вывод выше."
+  exit 1
 fi
