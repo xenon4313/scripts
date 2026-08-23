@@ -17,6 +17,8 @@
 ### `node.sh`
 Выбор версии, AIO в одном месте что бы сразу пользоваться
 
+
+### **`То ради чего тут`**
 **Сертификаты**
 curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | bash -> Получить сертификаты
 **Volta**
