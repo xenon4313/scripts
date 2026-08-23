@@ -27,7 +27,7 @@
 **Volta**
 
 
-```curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/node | bash``` -> Получить Volta, npm, node
+```curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/node.sh | bash``` -> Получить Volta, npm, node
 
 ## Лицензия
 
