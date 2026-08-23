@@ -121,7 +121,14 @@ if [ $? -eq 0 ]; then
   echo "Ключ:      $KEY_FILE"
   echo "Fullchain: $FULLCHAIN_FILE"
   echo ""
-  echo "Автопродление настроено acme.sh автоматически (через cron/systemd timer)."
+  # acme.sh использует cron, не systemd timer. Проверяем, что джоба реально есть.
+  if crontab -l 2>/dev/null | grep -q 'acme.sh'; then
+    echo "Автопродление: cron-джоба acme.sh найдена (crontab -l)."
+  else
+    echo "ВНИМАНИЕ: cron-джоба acme.sh не найдена в crontab -l."
+    echo "Ставлю вручную: $ACME_BIN --install-cronjob"
+    "$ACME_BIN" --install-cronjob || echo "Не удалось поставить cron-джобу. Настрой вручную: $ACME_BIN --install-cronjob"
+  fi
 else
   echo ""
   echo "Ошибка при выпуске. Смотри вывод выше."
