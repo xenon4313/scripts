@@ -33,4 +33,4 @@
 
 Я че вам манйкрафт что бы лицензии раздавать
 
-https://i.pinimg.com/1200x/b5/b4/69/b5b469d4080463f29fd61c8fc5e3041f.jpg
+![description]https://i.pinimg.com/1200x/b5/b4/69/b5b469d4080463f29fd61c8fc5e3041f.jpg
