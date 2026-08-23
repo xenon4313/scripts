@@ -35,7 +35,7 @@ done
 ACME_HOME="${HOME:-/root}/.acme.sh"
 if [ ! -f "$ACME_HOME/acme.sh" ]; then
   echo "acme.sh не найден. Устанавливаю..."
-  read -p "Email для регистрации в Let's Encrypt (можно пустым): " ACME_EMAIL
+  read -r -p "Email для регистрации в Let's Encrypt (можно пустым): " ACME_EMAIL </dev/tty
   if [ -n "$ACME_EMAIL" ]; then
     curl https://get.acme.sh | sh -s email="$ACME_EMAIL"
   else
@@ -69,7 +69,7 @@ if ss -tuln | grep -q ':80 '; then
   echo "Порт 80 занят. Смотрим, кто:"
   ss -tulnp | grep ':80 '
   echo ""
-  read -p "Остановить nginx? (y/n): " STOP_NGINX
+  read -r -p "Остановить nginx? (y/n): " STOP_NGINX </dev/tty
   if [[ "$STOP_NGINX" =~ ^[Yy]$ ]]; then
     systemctl stop nginx 2>/dev/null || service nginx stop
     echo "nginx остановлен."
@@ -82,8 +82,16 @@ else
 fi
 
 # === Ввод данных ===
-read -p "Введи домен (например example.com): " DOMAIN
-read -p "Имя для ключа (без .key, например example): " KEYNAME
+DOMAIN=""
+while [ -z "$DOMAIN" ]; do
+  read -r -p "Введи домен (например example.com): " DOMAIN </dev/tty
+done
+
+KEYNAME=""
+while [ -z "$KEYNAME" ]; do
+  read -r -p "Имя для ключа (без .key, например example): " KEYNAME </dev/tty
+done
+
 KEY_FILE="/etc/certs/${KEYNAME}.key"
 FULLCHAIN_FILE="/etc/certs/fullchain.cer"
 
@@ -93,7 +101,7 @@ if [ -f "$KEY_FILE" ] || [ -f "$FULLCHAIN_FILE" ]; then
   echo "Внимание! Уже существуют файлы:"
   [ -f "$KEY_FILE" ] && echo "  - $KEY_FILE"
   [ -f "$FULLCHAIN_FILE" ] && echo "  - $FULLCHAIN_FILE"
-  read -p "Перезаписать? (y/n): " OVERWRITE
+  read -r -p "Перезаписать? (y/n): " OVERWRITE </dev/tty
   if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
     echo "Отмена."
     exit 0
