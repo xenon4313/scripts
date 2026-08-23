@@ -3,8 +3,7 @@
 Скрипты для автоустановки всякого говна на сервер. Без лишних вопросов — запустил и работает.
 
 ## Скрипты
-
-### `issue-cert.sh`
+### `get.sh`
 
 Выпуск SSL-сертификата через `acme.sh` (Let's Encrypt), режим `--standalone`.
 
@@ -15,26 +14,14 @@
 - кладёт сертификат в `/etc/certs/`
 - настраивает автопродление (через acme.sh)
 
-**Использование:**
+### `node.sh`
+Выбор версии, AIO в одном месте что бы сразу пользоваться
 
-```bash
-chmod +x issue-cert.sh
-sudo ./issue-cert.sh
-```
-
-Требования: root, свободный порт 80 (или согласие остановить nginx).
-
-Результат:
-```
-/etc/certs/<имя>.key
-/etc/certs/fullchain.cer
-```
-
-## Требования
-
-- Debian/Ubuntu, CentOS/RHEL, Fedora или Alpine
-- root-доступ
+**Сертификаты**
+curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | bash -> Получить сертификаты
+**Volta**
+curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/node | bash -> Получить Volta, npm, node
 
 ## Лицензия
 
-MIT
+Я че вам манйкрафт что бы лицензии раздавать
