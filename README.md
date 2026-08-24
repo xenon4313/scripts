@@ -29,6 +29,9 @@
 
 ```curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/node.sh | bash``` -> Получить Volta, npm, node
 
+**Docker**
+```bash <(curl -fsSL https://raw.githubusercontent.com/<user>/server-scripts/main/install-docker.sh)``` -> docker
+
 ## Лицензия
 
 Я че вам манйкрафт что бы лицензии раздавать
