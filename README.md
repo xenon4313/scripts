@@ -11,8 +11,26 @@
 - ставит `acme.sh`, `curl`, `socat`, если их нет
 - проверяет порт 80, предлагает остановить nginx если занят
 - спрашивает домен и имя ключа
-- кладёт сертификат в `/etc/certs/`
+- кладёт сертификат в `/etc/certs/` (или в каталог из `--cert-dir`)
 - настраивает автопродление (через acme.sh)
+
+Обычный запуск остался интерактивным. Для автоматизации есть presets и флаги:
+
+```bash
+# Выпуск без вопросов (подходит и для curl | bash)
+curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | sudo bash -s -- \
+  --domain example.com --key-name example --cert-dir ./
+
+# Проверка выпуска через тестовый Let's Encrypt endpoint
+curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | sudo bash -s -- \
+  --preset staging --domain example.com --key-name example
+
+# Webroot вместо временной остановки сервера на 80 порту
+curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | sudo bash -s -- \
+  --preset webroot --webroot /var/www/html --domain example.com --key-name example
+```
+
+`--cert-dir` принимает обычный путь. Пустое значение, один пробел, `.` и `./` означают текущую директорию. Для занятого 80 порта добавь `--stop-nginx`; для уже существующих файлов — `--force`.
 
 ### `node.sh`
 Выбор версии, AIO в одном месте что бы сразу пользоваться
