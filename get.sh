@@ -47,6 +47,25 @@ WEBROOT=""
 ACME_EMAIL=""
 STOP_NGINX=0
 FORCE=0
+NGINX_PRE_HOOK=""
+NGINX_POST_HOOK=""
+
+configure_nginx_hooks() {
+  local service_manager
+
+  if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
+    service_manager="$(command -v systemctl)"
+    NGINX_PRE_HOOK="$service_manager stop nginx"
+    NGINX_POST_HOOK="$service_manager start nginx"
+  elif command -v service >/dev/null 2>&1 && service nginx status >/dev/null 2>&1; then
+    service_manager="$(command -v service)"
+    NGINX_PRE_HOOK="$service_manager nginx stop"
+    NGINX_POST_HOOK="$service_manager nginx start"
+  else
+    echo "Порт 80 занят, но активный nginx не найден. Освободи порт вручную." >&2
+    exit 1
+  fi
+}
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -164,8 +183,8 @@ if [ "$CHALLENGE" = "standalone" ] && ss -tuln | grep -q ':80 '; then
   ss -tulnp | grep ':80 '
   echo ""
   if [ "$STOP_NGINX" -eq 1 ]; then
-    systemctl stop nginx 2>/dev/null || service nginx stop
-    echo "nginx остановлен."
+    configure_nginx_hooks
+    echo "nginx будет остановлен только на время выпуска и автопродления."
   else
     echo "Без свободного 80 порта --standalone не сработает. Выход."
     exit 1
@@ -206,32 +225,33 @@ fi
 # === Выпуск сертификата ===
 echo ""
 echo "Выпускаю сертификат для $DOMAIN..."
+ACME_ISSUE_ARGS=(--issue -d "$DOMAIN")
 if [ "$CHALLENGE" = "standalone" ]; then
-  "$ACME_BIN" --issue -d "$DOMAIN" --standalone --server "$ACME_SERVER" \
-    --key-file "$KEY_FILE" \
-    --fullchain-file "$FULLCHAIN_FILE"
+  ACME_ISSUE_ARGS+=(--standalone)
 else
-  "$ACME_BIN" --issue -d "$DOMAIN" -w "$WEBROOT" --server "$ACME_SERVER" \
-    --key-file "$KEY_FILE" \
-    --fullchain-file "$FULLCHAIN_FILE"
+  ACME_ISSUE_ARGS+=(-w "$WEBROOT")
+fi
+ACME_ISSUE_ARGS+=(--server "$ACME_SERVER" --key-file "$KEY_FILE" --fullchain-file "$FULLCHAIN_FILE")
+if [ -n "$NGINX_PRE_HOOK" ]; then
+  ACME_ISSUE_ARGS+=(--pre-hook "$NGINX_PRE_HOOK" --post-hook "$NGINX_POST_HOOK")
 fi
 
-if [ $? -eq 0 ]; then
-  echo ""
-  echo "Готово!"
-  echo "Ключ:      $KEY_FILE"
-  echo "Fullchain: $FULLCHAIN_FILE"
-  echo ""
-  # acme.sh использует cron, не systemd timer. Проверяем, что джоба реально есть.
-  if crontab -l 2>/dev/null | grep -q 'acme.sh'; then
-    echo "Автопродление: cron-джоба acme.sh найдена (crontab -l)."
-  else
-    echo "ВНИМАНИЕ: cron-джоба acme.sh не найдена в crontab -l."
-    echo "Ставлю вручную: $ACME_BIN --install-cronjob"
-    "$ACME_BIN" --install-cronjob || echo "Не удалось поставить cron-джобу. Настрой вручную: $ACME_BIN --install-cronjob"
-  fi
-else
+if ! "$ACME_BIN" "${ACME_ISSUE_ARGS[@]}"; then
   echo ""
   echo "Ошибка при выпуске. Смотри вывод выше."
   exit 1
+fi
+
+echo ""
+echo "Готово!"
+echo "Ключ:      $KEY_FILE"
+echo "Fullchain: $FULLCHAIN_FILE"
+echo ""
+# acme.sh использует cron, не systemd timer. Проверяем, что джоба реально есть.
+if crontab -l 2>/dev/null | grep -q 'acme.sh'; then
+  echo "Автопродление: cron-джоба acme.sh найдена (crontab -l)."
+else
+  echo "ВНИМАНИЕ: cron-джоба acme.sh не найдена в crontab -l."
+  echo "Ставлю вручную: $ACME_BIN --install-cronjob"
+  "$ACME_BIN" --install-cronjob || echo "Не удалось поставить cron-джобу. Настрой вручную: $ACME_BIN --install-cronjob"
 fi
