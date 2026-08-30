@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | sud
   --preset webroot --webroot /var/www/html --domain example.com --key-name example
 ```
 
-`--cert-dir` принимает обычный путь. Пустое значение, один пробел, `.` и `./` означают текущую директорию. Для занятого 80 порта добавь `--stop-nginx`; для уже существующих файлов — `--force`.
+`--cert-dir` принимает обычный путь. Пустое значение, один пробел, `.` и `./` означают текущую директорию. Для занятого 80 порта добавь `--stop-nginx`: nginx остановится только на время выпуска, а те же hooks сохранятся для автопродления. Для уже существующих файлов добавь `--force`.
 
 ### `node.sh`
 Выбор версии, AIO в одном месте что бы сразу пользоваться
@@ -48,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | sud
 ```curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/node.sh | bash``` -> Получить Volta, npm, node
 
 **Docker**
-```bash <(curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/install-docker.sh)``` -> docker
+```bash <(curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/docker.sh)``` -> docker
 
 ## Лицензия
 
