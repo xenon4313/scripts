@@ -48,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/get.sh | sud
 ```curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/node.sh | bash``` -> Получить Volta, npm, node
 
 **Docker**
-```bash <(curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/install-docker.sh)``` -> docker
+```bash <(curl -fsSL https://raw.githubusercontent.com/xenon4313/scripts/main/docker.sh)``` -> docker
 
 ## Лицензия
 
